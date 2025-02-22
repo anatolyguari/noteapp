@@ -6,6 +6,7 @@ import cloudinary
 import cloudinary.uploader
 import time
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -113,4 +114,5 @@ def handle_clear_chat():
     emit('clear_chat', broadcast=True)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host="0.0.0.0", port=5000)
+    os.environ.get("PORT", 5000)
+    socketio.run(app, debug=True, host="0.0.0.0", port=port)
