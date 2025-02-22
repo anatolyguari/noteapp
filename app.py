@@ -15,7 +15,8 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # Initialize Firebase
 cred = credentials.Certificate("firebase_credentials.json")
 firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://gauri-33b54-default-rtdb.firebaseio.com/'
+    'https://rahilshaikh-6d1f2-default-rtdb.firebaseio.com/
+'
 })
 
 # Initialize Firebase references
