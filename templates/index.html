@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Keep Clone</title>
+  <!-- Google Fonts for improved typography -->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet"/>
+  
+  <!-- Socket.IO (optional if you plan to use real-time features) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="header">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <h1 class="header-title" id="headerTitle">Keep Notes</h1>
+    <div class="search-bar">
+      <span>🔍</span>
+      <input type="text" class="search-input" placeholder="Search" />
+    </div>
+    <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">🌙</button>
+  </header>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <a href="#" class="nav-item active">
+      <span>📝</span>
+      <span style="margin-left: 32px;">Notes</span>
+    </a>
+    <a href="#" class="nav-item">
+      <span>🔔</span>
+      <span style="margin-left: 32px;">Reminders</span>
+    </a>
+    <a href="#" class="nav-item">
+      <span>✏️</span>
+      <span style="margin-left: 32px;">Edit labels</span>
+    </a>
+    <a href="#" class="nav-item">
+      <span>🗑️</span>
+      <span style="margin-left: 32px;">Trash</span>
+    </a>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-container">
+    <div class="note-input-container">
+      <textarea class="note-input" placeholder="Take a note..." id="noteInput"></textarea>
+      <div class="note-actions">
+        <div>
+          <button class="action-btn" title="Pin Note">📌</button>
+          <button class="action-btn" title="Change Color">🎨</button>
+          <button class="action-btn" title="Attach File">📎</button>
+        </div>
+        <button class="action-btn" title="Save Note" onclick="saveNote()">✓</button>
+      </div>
+    </div>
+    <div class="notes-grid" id="notesGrid"></div>
+  </main>
+
+  <!-- HIDDEN CHAT CONTAINER -->
+  <div id="chatContainer">
+    <div id="chatHeader">
+      <span>Secret Chat</span>
+      <button id="clearChatBtn" title="Clear Chat">Clear Chat</button>
+    </div>
+    <div id="chatMessages"></div>
+    <div id="chatInputContainer">
+      <textarea id="chatInput" placeholder="Type a secret message..." rows="3"></textarea>
+      <input type="file" id="chatFileInput" accept=".jpeg,.jpg,.png,.pdf" style="display:none;" />
+      <button id="chatFileBtn" title="Attach File">📎</button>
+      <button id="chatSendBtn" title="Send Message">Send</button>
+    </div>
+  </div>
+
+  <script>
+    // If you have a Socket.IO server, connect here. If not, you can remove these lines.
+    const socket = io();  
+    const sidebar = document.getElementById('sidebar');
+    const notesGrid = document.getElementById('notesGrid');
+    const noteInput = document.getElementById('noteInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
+    
+    // Sidebar toggle
+    function toggleSidebar() {
+      sidebar.classList.toggle('active');
+    }
+
+    // Save note (emits to Socket.IO, then adds locally)
+    function saveNote() {
+      const content = noteInput.value.trim();
+      if (content) {
+        const note = {
+          content,
+          timestamp: Date.now()
+        };
+        // Emit to Socket.IO (remove if you don’t need real-time sync)
+        socket.emit('send_note', note);
+        // Clear input and add note locally
+        noteInput.value = '';
+        addNoteToGrid(note);
+      }
+    }
+
+    // Display new note in the grid
+    function addNoteToGrid(note) {
+      const noteEl = document.createElement('div');
+      noteEl.className = 'note-card';
+      noteEl.innerHTML = `
+        <div class="note-content">${note.content}</div>
+        <div class="note-footer">
+          <span>${new Date(note.timestamp).toLocaleDateString()}</span>
+          <div>
+            <button class="action-btn" title="Pin Note">📌</button>
+            <button class="action-btn" title="Change Color">🎨</button>
+          </div>
+        </div>
+      `;
+      // Prepend so newest note is at the top
+      notesGrid.prepend(noteEl);
+    }
+
+    // Receive a note from server (if using Socket.IO)
+    socket.on('receive_note', (note) => {
+      addNoteToGrid(note);
+    });
+
+    // Adjust note input height on focus
+    noteInput.addEventListener('focus', () => {
+      noteInput.style.minHeight = '100px';
+    });
+    noteInput.addEventListener('blur', () => {
+      if (!noteInput.value.trim()) {
+        noteInput.style.minHeight = '46px';
+      }
+    });
+
+    // HIDDEN CHAT FUNCTIONALITY
+    const chatContainer = document.getElementById('chatContainer');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const headerTitle = document.getElementById('headerTitle');
+
+    // Toggle secret chat on double-clicking the header title
+    headerTitle.addEventListener('dblclick', toggleChat);
+    function toggleChat() {
+      chatContainer.style.display = 
+        chatContainer.style.display === 'none' || chatContainer.style.display === '' 
+          ? 'flex' 
+          : 'none';
+    }
+
+    // Send message on Enter (without shift)
+    chatInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChatMessage();
+      }
+    });
+    // Or click the "Send" button
+    chatSendBtn.addEventListener('click', sendChatMessage);
+
+    function sendChatMessage() {
+      const messageText = chatInput.value.trim();
+      if (messageText) {
+        const messageData = { message: messageText };
+        socket.emit('send_message', messageData); // Remove if no real-time
+        chatInput.value = '';
+      }
+    }
+
+    // Receive incoming message
+    socket.on('receive_message', (msg) => {
+      addMessageToChat(msg);
+    });
+
+    function addMessageToChat(msg) {
+      const msgEl = document.createElement('div');
+      msgEl.classList.add('chat-message');
+      let messageText = (msg.type === 'file' && msg.file_url) ? 'File Message' : msg.content;
+      msgEl.setAttribute('data-msg', messageText);
+
+      const timestampEl = document.createElement('div');
+      timestampEl.classList.add('timestamp');
+      timestampEl.textContent = new Date(msg.timestamp * 1000).toLocaleTimeString();
+
+      const contentEl = document.createElement('div');
+      contentEl.classList.add('message-content');
+
+      if (msg.type === 'file' && msg.file_url) {
+        // Show image or PDF link
+        if (/\.(jpeg|jpg|png)$/i.test(msg.file_url)) {
+          contentEl.innerHTML = `
+            <img src="${msg.file_url}" alt="Image preview" style="max-width:100%; border-radius:5px;"/><br>
+            <button onclick="downloadFile('${msg.file_url}')">Download</button>`;
+        } else if (/\.pdf$/i.test(msg.file_url)) {
+          contentEl.innerHTML = `
+            <a href="${msg.file_url}" target="_blank" download>View PDF</a><br>
+            <button onclick="downloadFile('${msg.file_url}')">Download</button>`;
+        } else {
+          contentEl.innerHTML = `📎 <a href="${msg.file_url}" target="_blank" download>Download file</a>`;
+        }
+      } else {
+        contentEl.textContent = msg.content;
+      }
+
+      const replyBtn = document.createElement('button');
+      replyBtn.classList.add('reply-btn');
+      replyBtn.textContent = 'Reply';
+      replyBtn.addEventListener('click', function () {
+        replyToMessage(msgEl);
+      });
+
+      msgEl.appendChild(timestampEl);
+      msgEl.appendChild(contentEl);
+      msgEl.appendChild(replyBtn);
+
+      chatMessages.appendChild(msgEl);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // File sending (optional if using real-time file chat)
+    document.getElementById('chatFileBtn').addEventListener('click', () => {
+      document.getElementById('chatFileInput').click();
+    });
+
+    document.getElementById('chatFileInput').addEventListener('change', function() {
+      const file = this.files[0];
+      if (file) {
+        socket.emit('send_file', { file: file });
+      }
+    });
+
+    // Clear chat (for everyone, if real-time)
+    socket.on('clear_chat', () => {
+      document.getElementById('chatMessages').innerHTML = '';
+    });
+    document.getElementById('clearChatBtn').addEventListener('click', () => {
+      if (confirm('Are you sure you want to clear the chat for everyone?')) {
+        socket.emit('clear_chat');
+      }
+    });
+
+    function downloadFile(url) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function replyToMessage(msgElement) {
+      const msgText = msgElement.getAttribute('data-msg');
+      chatInput.value = `Replying to message: ${msgText}\n`;
+      chatInput.focus();
+    }
+
+    // Dark Mode Toggle
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+    }
+  </script>
+</body>
+</html>
