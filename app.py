@@ -7,23 +7,31 @@ import cloudinary.uploader
 import time
 from datetime import datetime
 import os
+import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Initialize Firebase
-cred = credentials.Certificate("firebase_credentials.json")
+# Initialize Firebase credentials securely
+firebase_creds = os.environ.get("FIREBASE_CREDENTIALS")
+if firebase_creds:
+    # Load credentials from the environment variable (as a JSON string)
+    cred_info = json.loads(firebase_creds)
+    cred = credentials.Certificate(cred_info)
+else:
+    # Fallback to local file (ensure this file is in your .gitignore)
+    cred = credentials.Certificate("firebase_credentials.json")
+
 firebase_admin.initialize_app(cred, {
-    'https://rahilshaikh-6d1f2-default-rtdb.firebaseio.com/
-'
+    'databaseURL': 'https://rahilshaikh-6d1f2-default-rtdb.firebaseio.com/'
 })
 
 # Initialize Firebase references
 messages_ref = db.reference("messages")
 notes_ref = db.reference("notes")
 
-# Cloudinary Setup
+# Cloudinary Setup (consider using environment variables for these too)
 cloudinary.config(
     cloud_name="dejlyocyq",
     api_key="612143172989225",
@@ -107,6 +115,7 @@ def handle_connect():
         for note_id, note in notes.items():
             note["id"] = note_id
             emit('receive_note', note)
+
 @socketio.on('clear_chat')
 def handle_clear_chat():
     # Delete all messages from the Firebase "messages" reference
@@ -117,5 +126,3 @@ def handle_clear_chat():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     socketio.run(app, debug=True, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
-
-
