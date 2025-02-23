@@ -3,60 +3,120 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Keep Clone</title>
+  <title>Google Keep</title>
   <!-- Google Fonts for improved typography -->
   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet"/>
-  
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='64'%3E%F0%9F%93%92%3C/text%3E%3C/svg%3E">
+
   <!-- Socket.IO (optional if you plan to use real-time features) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    /* Mobile adjustments for reminders and labels sections */
+    @media (max-width: 600px) {
+      #reminderContent {
+        width: 80% !important;
+      }
+      #remindersGrid > div {
+        width: 90% !important;
+      }
+      #labelName {
+        width: 80% !important;
+      }
+      #labelsList > div {
+        width: 90% !important;
+      }
+    }
+  </style>
+  
 </head>
 <body>
   <!-- HEADER -->
   <header class="header">
-    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-    <h1 class="header-title" id="headerTitle">Keep Notes</h1>
-    <div class="search-bar">
-      <span>🔍</span>
-      <input type="text" class="search-input" placeholder="Search" />
-    </div>
+    <button class="menu-btn" style="color:var(--text-color);" onclick="toggleSidebar()">☰</button>
+    <h1 class="header-title" id="headerTitle">📒Keep Notes</h1>
+    
     <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">🌙</button>
   </header>
 
   <!-- SIDEBAR -->
   <nav class="sidebar" id="sidebar">
-    <a href="#" class="nav-item active">
+    <a href="#" class="nav-item active" onclick="showSection('notes', this)">
       <span>📝</span>
       <span style="margin-left: 32px;">Notes</span>
     </a>
-    <a href="#" class="nav-item">
+    <a href="#" class="nav-item" onclick="showSection('reminders', this)">
       <span>🔔</span>
       <span style="margin-left: 32px;">Reminders</span>
     </a>
-    <a href="#" class="nav-item">
+    <a href="#" class="nav-item" onclick="showSection('editLabels', this)">
       <span>✏️</span>
-      <span style="margin-left: 32px;">Edit labels</span>
-    </a>
-    <a href="#" class="nav-item">
-      <span>🗑️</span>
-      <span style="margin-left: 32px;">Trash</span>
+      <span style="margin-left: 32px;">Edit Labels</span>
     </a>
   </nav>
+  
 
   <!-- MAIN CONTENT -->
   <main class="main-container">
-    <div class="note-input-container">
-      <textarea class="note-input" placeholder="Take a note..." id="noteInput"></textarea>
-      <div class="note-actions">
-        <div>
-          <button class="action-btn" title="Pin Note">📌</button>
-          <button class="action-btn" title="Change Color">🎨</button>
-          <button class="action-btn" title="Attach File">📎</button>
+    <!-- NOTES SECTION -->
+    <div id="notesSection">
+      <div class="note-input-container">
+        <textarea class="note-input" placeholder="Take a note..." id="noteInput"></textarea>
+        <div class="note-actions">
+          <button class="action-btn" title="Save Note" onclick="saveNote()">Save✓</button>
         </div>
-        <button class="action-btn" title="Save Note" onclick="saveNote()">✓</button>
+      </div>
+      <div class="notes-grid" id="notesGrid">
+        {% for note_id, note in notes.items() %}
+          <div class="note-card" id="note-{{ note_id }}" {% if note.color %} style="background-color: {{ note.color }};" {% endif %}>
+            <div class="note-content">{{ note.content }}</div>
+            <div class="note-footer">
+              <span>{{ note.timestamp | datetimeformat }}</span>
+              <div>
+                <button class="action-btn" title="Pin Note" onclick="togglePin('{{ note_id }}')">📌</button>
+                <button class="action-btn" title="Change Color" onclick="changeColor('{{ note_id }}')">🎨</button>
+                <button class="action-btn" title="Delete Note" onclick="deleteNote('{{ note_id }}')">🗑️</button>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
       </div>
     </div>
-    <div class="notes-grid" id="notesGrid"></div>
+<!-- REMINDERS SECTION -->
+<div id="remindersSection" style="display:none; padding: 30px; border: 1px #ccc; margin: 20px; border-radius: 8px; background-color: var(--bg-color);">
+  <div style="margin-bottom: 20px; text-align: center;">
+    <input type="text" id="reminderContent" placeholder="Enter reminder..." style="padding: 10px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px; width: 40%;background-color: var(--bg-color);color: var(--text-color);">
+    <input type="datetime-local" id="reminderTime" style="padding: 10px; margin-right: 10px; border: 1px solid #dddddd29; border-radius: 4px;background-color: var(--bg-color);color: var(--text-color);">
+    <button onclick="saveReminder()" style="padding: 10px 15px; background-color: #fbbc04; border: none; border-radius: 4px; cursor: pointer;">Save Reminder</button>
+  </div>
+  <div id="remindersGrid" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
+    {% for reminder_id, reminder in reminders.items() %}
+      <div id="reminder-{{ reminder_id }}" style="border: 1px solid #dddddd2d; border-radius: 8px; padding: 15px; background: var(--card-bg); width: 30%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.2s;">
+        <div style="margin-bottom: 10px; font-size: 16px; font-weight: bold;color: var(--text-color);">{{ reminder.content }}</div>
+        <div style="margin-bottom: 10px; font-size: 14px; color: var(--text-color);">{{ reminder.reminder_time }}</div>
+        <button onclick="deleteReminder('{{ reminder_id }}')" style="padding: 6px 10px; background-color: #e74c3c; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Delete</button>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- EDIT LABELS SECTION -->
+<div id="editLabelsSection" style="display:none; padding: 30px; border: 1px #ccc; margin: 20px; border-radius: 8px; background-color:var(--bg-color);">
+  <div style="margin-bottom: 20px; text-align: center;">
+    <input type="text" id="labelName" placeholder="New label name" style="padding: 10px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px; width: 30%;background-color: var(--bg-color);color: var(--text-color);">
+    <input type="color" id="labelColor" value="#ffffff" style="padding: 4px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px;">
+    <button onclick="saveLabel()" style="padding: 10px 15px; background-color: #fbbc04; border: none; border-radius: 4px; cursor: pointer;">Add Label</button>
+  </div>
+  <div id="labelsList" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
+    {% for label_id, label in labels.items() %}
+      <div id="label-{{ label_id }}" style="padding: 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 8px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 30%;">
+        <span style="background-color: {{ label.color }}; padding: 6px 12px; border-radius: 4px; font-weight: bold; color: #fff;">{{ label.name }}</span>
+        <button onclick="deleteLabel('{{ label_id }}')" style="padding: 6px 10px; background-color: #e74c3c; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Delete</button>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
   </main>
 
   <!-- HIDDEN CHAT CONTAINER -->
@@ -84,43 +144,240 @@
     
     // Sidebar toggle
     function toggleSidebar() {
-      sidebar.classList.toggle('active');
+      document.getElementById('sidebar').classList.toggle('active');
     }
+
+    function showSection(section, element) {
+  // Remove active class from all sidebar links
+  document.querySelectorAll('.sidebar .nav-item').forEach(item => item.classList.remove('active'));
+
+  // Hide all main sections
+  document.getElementById('notesSection').style.display = 'none';
+  document.getElementById('remindersSection').style.display = 'none';
+  document.getElementById('editLabelsSection').style.display = 'none';
+
+  // Show the selected section
+  if (section === 'notes') {
+    document.getElementById('notesSection').style.display = 'block';
+  } else if (section === 'reminders') {
+    document.getElementById('remindersSection').style.display = 'block';
+  } else if (section === 'editLabels') {
+    document.getElementById('editLabelsSection').style.display = 'block';
+  }
+
+  // Set the clicked nav item as active
+  element.classList.add('active');
+}
 
     // Save note (emits to Socket.IO, then adds locally)
     function saveNote() {
+      const noteInput = document.getElementById('noteInput');
       const content = noteInput.value.trim();
-      if (content) {
-        const note = {
-          content,
-          timestamp: Date.now()
-        };
-        // Emit to Socket.IO (remove if you don’t need real-time sync)
-        socket.emit('send_note', note);
-        // Clear input and add note locally
-        noteInput.value = '';
-        addNoteToGrid(note);
+      if(content) {
+        fetch('/api/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if(data.status === 'success') {
+            addNoteToGrid(data.note);
+            noteInput.value = '';
+          }
+        });
       }
     }
 
     // Display new note in the grid
     function addNoteToGrid(note) {
-      const noteEl = document.createElement('div');
-      noteEl.className = 'note-card';
-      noteEl.innerHTML = `
-        <div class="note-content">${note.content}</div>
-        <div class="note-footer">
-          <span>${new Date(note.timestamp).toLocaleDateString()}</span>
-          <div>
-            <button class="action-btn" title="Pin Note">📌</button>
-            <button class="action-btn" title="Change Color">🎨</button>
-          </div>
-        </div>
-      `;
-      // Prepend so newest note is at the top
-      notesGrid.prepend(noteEl);
+  // Prevent duplicate notes
+  if (document.getElementById('note-' + note.id)) return;
+
+  const notesGrid = document.getElementById('notesGrid');
+  const noteEl = document.createElement('div');
+  noteEl.className = 'note-card';
+  noteEl.id = 'note-' + note.id;
+  
+  // If the note has a color property, apply it
+  if (note.color) {
+    noteEl.style.backgroundColor = note.color;
+  }
+  
+  // Store pinned state as a data attribute
+  noteEl.setAttribute('data-pinned', note.pinned ? 'true' : 'false');
+  
+  noteEl.innerHTML = `
+    <div class="note-content">${note.content}</div>
+    <div class="note-footer">
+      <span>${new Date(note.timestamp * 1000).toLocaleString()}</span>
+      <div>
+        <button class="action-btn" title="Pin Note" onclick="togglePin('${note.id}')">📌</button>
+        <button class="action-btn" title="Change Color" onclick="changeColor('${note.id}')">🎨</button>
+        <button class="action-btn" title="Delete Note" onclick="deleteNote('${note.id}')">🗑️</button>
+      </div>
+    </div>`;
+  notesGrid.prepend(noteEl);
+}
+
+
+// Toggle the pinned state of a note
+function togglePin(noteId) {
+  const noteEl = document.getElementById('note-' + noteId);
+  // Retrieve current pinned state from the data attribute
+  let currentPinned = noteEl.getAttribute('data-pinned') === 'true';
+  let newPinned = !currentPinned;
+  
+  // Update the UI data attribute
+  noteEl.setAttribute('data-pinned', newPinned);
+  
+  // Optionally, update the pin icon (for example, you could change the icon text)
+  // Here we keep it simple and always show the same icon.
+  
+  // Update the note in Firebase via PUT request
+  fetch('/api/notes/' + noteId, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pinned: newPinned })
+  });
+}
+
+// Change the note's background color
+function changeColor(noteId) {
+  const noteEl = document.getElementById('note-' + noteId);
+  
+  // Ensure the note element is positioned relatively so the overlay positions correctly
+  noteEl.style.position = 'relative';
+
+  // Create a color picker overlay div
+  const picker = document.createElement('div');
+  picker.style.position = 'absolute';
+  picker.style.top = '10px';
+  picker.style.right = '10px';
+  picker.style.backgroundColor = '#fff';
+  picker.style.border = '1px solid #ddd';
+  picker.style.borderRadius = '4px';
+  picker.style.padding = '5px';
+  picker.style.display = 'flex';
+  picker.style.gap = '5px';
+  picker.style.zIndex = '10';
+
+  // Create yellow button
+  const yellowBtn = document.createElement('button');
+  yellowBtn.style.backgroundColor = '#fbbc04'; // yellow
+  yellowBtn.style.color = '#fff';
+  yellowBtn.style.border = 'none';
+  yellowBtn.style.padding = '5px 10px';
+  yellowBtn.style.borderRadius = '4px';
+  yellowBtn.style.cursor = 'pointer';
+  yellowBtn.textContent = 'Yellow';
+  yellowBtn.onclick = function() {
+    // Update UI color
+    noteEl.style.backgroundColor = '#fbbc04';
+    // Update Firebase with the new color
+    fetch('/api/notes/' + noteId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ color: '#fbbc04' })
+    });
+    // Remove the picker overlay
+    noteEl.removeChild(picker);
+  };
+
+  // Create pink button
+  const pinkBtn = document.createElement('button');
+  pinkBtn.style.backgroundColor = '#ff4081'; // pink
+  pinkBtn.style.color = '#fff';
+  pinkBtn.style.border = 'none';
+  pinkBtn.style.padding = '5px 10px';
+  pinkBtn.style.borderRadius = '4px';
+  pinkBtn.style.cursor = 'pointer';
+  pinkBtn.textContent = 'Pink';
+  pinkBtn.onclick = function() {
+    // Update UI color
+    noteEl.style.backgroundColor = '#ff4081';
+    // Update Firebase with the new color
+    fetch('/api/notes/' + noteId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ color: '#ff4081' })
+    });
+    // Remove the picker overlay
+    noteEl.removeChild(picker);
+  };
+
+  // Append the buttons to the picker overlay
+  picker.appendChild(yellowBtn);
+  picker.appendChild(pinkBtn);
+
+  // Remove any existing picker first
+  const existingPicker = noteEl.querySelector('.color-picker-overlay');
+  if (existingPicker) {
+    noteEl.removeChild(existingPicker);
+  }
+  
+  // Optionally assign a class for easier future styling
+  picker.className = 'color-picker-overlay';
+
+  // Append the picker overlay to the note card
+  noteEl.appendChild(picker);
+}
+
+    function deleteNote(noteId) {
+      fetch('/api/notes/' + noteId, { method: 'DELETE' })
+      .then(res => res.json())
+      .then(data => {
+        if(data.status === 'success') {
+          const noteEl = document.getElementById('note-' + noteId);
+          if(noteEl) noteEl.remove();
+        }
+      });
     }
 
+    function saveReminder() {
+      const content = document.getElementById('reminderContent').value.trim();
+      const reminderTime = document.getElementById('reminderTime').value;
+      if(content && reminderTime) {
+        fetch('/api/reminders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content, reminder_time: reminderTime })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if(data.status === 'success') {
+            addReminderToGrid(data.reminder);
+            document.getElementById('reminderContent').value = '';
+            document.getElementById('reminderTime').value = '';
+          }
+        });
+      }
+    }
+
+    function addReminderToGrid(reminder) {
+      const remindersGrid = document.getElementById('remindersGrid');
+      const reminderEl = document.createElement('div');
+      reminderEl.className = 'reminder-card';
+      reminderEl.id = 'reminder-' + reminder.id;
+      reminderEl.innerHTML = `
+        <div class="reminder-content">${reminder.content}</div>
+        <div class="reminder-time">${reminder.reminder_time}</div>
+        <button onclick="deleteReminder('${reminder.id}')">Delete</button>`;
+      remindersGrid.prepend(reminderEl);
+    }
+
+    function deleteReminder(reminderId) {
+      fetch('/api/reminders/' + reminderId, { method: 'DELETE' })
+      .then(res => res.json())
+      .then(data => {
+        if(data.status === 'success') {
+          const remEl = document.getElementById('reminder-' + reminderId);
+          if(remEl) remEl.remove();
+        }
+      });
+    }
+
+    
     // Receive a note from server (if using Socket.IO)
     socket.on('receive_note', (note) => {
       addNoteToGrid(note);
@@ -135,6 +392,47 @@
         noteInput.style.minHeight = '46px';
       }
     });
+
+    function saveLabel() {
+      const name = document.getElementById('labelName').value.trim();
+      const color = document.getElementById('labelColor').value;
+      if(name) {
+        fetch('/api/labels', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, color })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if(data.status === 'success') {
+            addLabelToList(data.label);
+            document.getElementById('labelName').value = '';
+          }
+        });
+      }
+    }
+
+    function addLabelToList(label) {
+      const labelsList = document.getElementById('labelsList');
+      const labelEl = document.createElement('div');
+      labelEl.className = 'label-item';
+      labelEl.id = 'label-' + label.id;
+      labelEl.innerHTML = `<span style="background-color: ${label.color};">${label.name}</span>
+                           <button onclick="deleteLabel('${label.id}')">Delete</button>`;
+      labelsList.prepend(labelEl);
+    }
+
+    function deleteLabel(labelId) {
+      fetch('/api/labels/' + labelId, { method: 'DELETE' })
+      .then(res => res.json())
+      .then(data => {
+        if(data.status === 'success') {
+          const labelEl = document.getElementById('label-' + labelId);
+          if(labelEl) labelEl.remove();
+        }
+      });
+    }
+
 
     // HIDDEN CHAT FUNCTIONALITY
     const chatContainer = document.getElementById('chatContainer');
@@ -193,7 +491,7 @@
         if (/\.(jpeg|jpg|png)$/i.test(msg.file_url)) {
           contentEl.innerHTML = `
             <img src="${msg.file_url}" alt="Image preview" style="max-width:100%; border-radius:5px;"/><br>
-            <button onclick="downloadFile('${msg.file_url}')">Download</button>`;
+            <button onclick="downloadFile('${msg.file_url}')" style="background: var(--primary-color);border: none;color: #fff;border-radius: 20px;padding: 3px 3px;">Download</button>`;
         } else if (/\.pdf$/i.test(msg.file_url)) {
           contentEl.innerHTML = `
             <a href="${msg.file_url}" target="_blank" download>View PDF</a><br>
@@ -259,8 +557,19 @@
 
     // Dark Mode Toggle
     function toggleDarkMode() {
-      document.body.classList.toggle('dark-mode');
-    }
+  document.body.classList.toggle('dark-mode');
+  // Save the state to localStorage
+  if (document.body.classList.contains('dark-mode')) {
+    localStorage.setItem('darkMode', 'true');
+  } else {
+    localStorage.setItem('darkMode', 'false');
+  }
+}
+window.addEventListener('load', () => {
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+  }
+});
   </script>
 </body>
 </html>
