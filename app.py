@@ -12,7 +12,15 @@ app.config['SECRET_KEY'] = 'your_secret_key'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Initialize Firebase
-cred = credentials.Certificate("firebase_credentials.json")
+firebase_creds = os.environ.get("FIREBASE_CREDENTIALS")
+if firebase_creds:
+    # Load credentials from the environment variable (as a JSON string)
+    cred_info = json.loads(firebase_creds)
+    cred = credentials.Certificate(cred_info)
+else:
+    # Fallback to local file (ensure this file is in your .gitignore)
+    cred = credentials.Certificate("firebase_credentials.json")
+
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://rahilshaikh-6d1f2-default-rtdb.firebaseio.com/'
 })
