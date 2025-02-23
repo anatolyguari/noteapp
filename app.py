@@ -66,6 +66,10 @@ def handle_notes():
         }
         note_id = notes_ref.push(note).key
         note["id"] = note_id
+
+        # Emit the new note to all connected clients in realtime
+        socketio.emit('receive_note', note, broadcast=True)
+
         return jsonify({"status": "success", "note": note})
     else:
         notes = notes_ref.get()
@@ -142,9 +146,14 @@ def handle_send_message(data):
         "timestamp": time.time(),
         "type": "text"
     }
+    if "reply_to" in data and data["reply_to"]:
+        message["reply_to"] = data["reply_to"]
+        message["reply_text"] = data["reply_text"]
+    
     message_id = messages_ref.push(message).key
     message["id"] = message_id
     emit('receive_message', message, broadcast=True)
+
 
 @socketio.on('send_file')
 def handle_send_file(data):
@@ -164,6 +173,15 @@ def handle_send_file(data):
             emit('error', {"message": "File upload failed"})
     else:
         emit('error', {"message": "No file provided"})
+@socketio.on('delete_message')
+def handle_delete_message(data):
+    message_id = data.get('id')
+    if message_id:
+        # Delete the message from Firebase
+        messages_ref.child(message_id).delete()
+        # Broadcast the deletion to all clients
+        emit('message_deleted', message_id, broadcast=True)
+
 
 @socketio.on('connect')
 def handle_connect():
@@ -183,7 +201,7 @@ def handle_connect():
 def handle_clear_chat():
     messages_ref.delete()
     emit('clear_chat', broadcast=True)
-
+    
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     socketio.run(app, debug=True, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
