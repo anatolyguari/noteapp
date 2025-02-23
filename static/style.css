@@ -7,14 +7,16 @@
     --text-color: #202124;
     --bg-color: #f8f9fa;
     --card-bg: #ffffff;
+    --high: #feefc3be;
   }
 
   /* Dark mode variable overrides */
   body.dark-mode {
-    --bg-color: #121212;
-    --card-bg: #1e1e1e;
+    --bg-color: #202124;
+    --card-bg: #202124;
     --text-color: #e0e0e0;
     --border-color: #333;
+    --high: #41331ca8;
   }
 
   * {
@@ -133,7 +135,7 @@
   }
 
   .nav-item.active {
-    background-color: #feefc3;
+    background-color: var(--high);
   }
 
   .main-container {
@@ -150,13 +152,13 @@
     margin: 32px auto;
     background: var(--card-bg);
     border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(189, 189, 189, 0.1);
     padding: 20px;
     transition: box-shadow 0.3s;
   }
 
   .note-input-container:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(190, 190, 190, 0.15);
   }
 
   .note-input {
@@ -166,8 +168,10 @@
     padding: 10px;
     font-size: 16px;
     outline: none;
-    min-height: 46px;
+    min-height: 40px;
     white-space: pre-wrap;
+    background-color: var(--bg-color);
+    color: var(--text-color);
   }
 
   .note-actions {
@@ -191,10 +195,12 @@
     align-items: center;
     justify-content: center;
     transition: background-color 0.3s, transform 0.2s;
+    color: var(--text-color);
   }
 
   .action-btn:hover {
     background-color: var(--bg-color);
+    color: var(--text-color);
     transform: scale(1.1);
   }
 
@@ -212,7 +218,7 @@
     background: var(--card-bg);
     border-radius: 12px;
     padding: 16px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(245, 245, 245, 0.1);
     transition: box-shadow 0.3s, transform 0.2s;
     min-height: 120px;
     display: flex;
@@ -265,8 +271,8 @@
     position: fixed;
     bottom: 20px;
     right: 20px;
-    width: 320px;
-    height: 600px;
+    width: 400px;
+    height: 700px;
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 12px;
@@ -318,21 +324,22 @@
   #chatMessages {
     flex: 1;
     padding: 12px;
-    background: #f0f0f0;
+    background: var(--card-bg);
     overflow-y: auto;
     font-family: 'Roboto', sans-serif;
   }
 
   .chat-message {
-    background: #fff;
+    background: var(--card-bg);
     border-radius: 10px;
     padding: 10px 14px;
     margin-bottom: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 6px var(--text-color);
     max-width: 80%;
     word-wrap: break-word;
     display: flex;
     flex-direction: column;
+    color: var(--text-color);
   }
 
   .chat-message.self {
@@ -350,6 +357,7 @@
   .chat-message .message-content {
     font-size: 14px;
     line-height: 1.4;
+
   }
 
   .chat-message .reply-btn {
@@ -379,12 +387,15 @@
 
   #chatInput {
     flex: 1;
-    border: 1px solid #ddd;
+    border: 1px #ddd;
     border-radius: 20px;
     padding: 10px 14px;
     font-size: 14px;
     resize: none;
     outline: none;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+
   }
 
   #chatSendBtn {
