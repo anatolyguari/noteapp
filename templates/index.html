@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Google Keep</title>
   <!-- Google Fonts for improved typography -->
-  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet"/>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='64'%3E%F0%9F%93%92%3C/text%3E%3C/svg%3E">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='64'%3E%F0%9F%93%92%3C/text%3E%3C/svg%3E">
 
   <!-- Socket.IO (optional if you plan to use real-time features) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
@@ -17,25 +19,29 @@
       #reminderContent {
         width: 80% !important;
       }
-      #remindersGrid > div {
+
+      #remindersGrid>div {
         width: 90% !important;
       }
+
       #labelName {
         width: 80% !important;
       }
-      #labelsList > div {
+
+      #labelsList>div {
         width: 90% !important;
       }
     }
   </style>
-  
+
 </head>
+
 <body>
   <!-- HEADER -->
   <header class="header">
     <button class="menu-btn" style="color:var(--text-color);" onclick="toggleSidebar()">☰</button>
     <h1 class="header-title" id="headerTitle">📒Keep Notes</h1>
-    
+
     <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">🌙</button>
   </header>
 
@@ -54,7 +60,7 @@
       <span style="margin-left: 32px;">Edit Labels</span>
     </a>
   </nav>
-  
+
 
   <!-- MAIN CONTENT -->
   <main class="main-container">
@@ -68,54 +74,73 @@
       </div>
       <div class="notes-grid" id="notesGrid">
         {% for note_id, note in notes.items() %}
-          <div class="note-card" id="note-{{ note_id }}" {% if note.color %} style="background-color: {{ note.color }};" {% endif %}>
-            <div class="note-content">{{ note.content }}</div>
-            <div class="note-footer">
-              <span>{{ note.timestamp | datetimeformat }}</span>
-              <div>
-                <button class="action-btn" title="Pin Note" onclick="togglePin('{{ note_id }}')">📌</button>
-                <button class="action-btn" title="Change Color" onclick="changeColor('{{ note_id }}')">🎨</button>
-                <button class="action-btn" title="Delete Note" onclick="deleteNote('{{ note_id }}')">🗑️</button>
-              </div>
+        <div class="note-card" id="note-{{ note_id }}" {% if note.color %} style="background-color: {{ note.color }};"
+          {% endif %}>
+          <div class="note-content">{{ note.content }}</div>
+          <div class="note-footer">
+            <span>{{ note.timestamp | datetimeformat }}</span>
+            <div>
+              <button class="action-btn" title="Pin Note" onclick="togglePin('{{ note_id }}')">📌</button>
+              <button class="action-btn" title="Change Color" onclick="changeColor('{{ note_id }}')">🎨</button>
+              <button class="action-btn" title="Delete Note" onclick="deleteNote('{{ note_id }}')">🗑️</button>
             </div>
           </div>
+        </div>
         {% endfor %}
       </div>
     </div>
-<!-- REMINDERS SECTION -->
-<div id="remindersSection" style="display:none; padding: 30px; border: 1px #ccc; margin: 20px; border-radius: 8px; background-color: var(--bg-color);">
-  <div style="margin-bottom: 20px; text-align: center;">
-    <input type="text" id="reminderContent" placeholder="Enter reminder..." style="padding: 10px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px; width: 40%;background-color: var(--bg-color);color: var(--text-color);">
-    <input type="datetime-local" id="reminderTime" style="padding: 10px; margin-right: 10px; border: 1px solid #dddddd29; border-radius: 4px;background-color: var(--bg-color);color: var(--text-color);">
-    <button onclick="saveReminder()" style="padding: 10px 15px; background-color: #fbbc04; border: none; border-radius: 4px; cursor: pointer;">Save Reminder</button>
-  </div>
-  <div id="remindersGrid" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
-    {% for reminder_id, reminder in reminders.items() %}
-      <div id="reminder-{{ reminder_id }}" style="border: 1px solid #dddddd2d; border-radius: 8px; padding: 15px; background: var(--card-bg); width: 30%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.2s;">
-        <div style="margin-bottom: 10px; font-size: 16px; font-weight: bold;color: var(--text-color);">{{ reminder.content }}</div>
-        <div style="margin-bottom: 10px; font-size: 14px; color: var(--text-color);">{{ reminder.reminder_time }}</div>
-        <button onclick="deleteReminder('{{ reminder_id }}')" style="padding: 6px 10px; background-color: #e74c3c; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Delete</button>
+    <!-- REMINDERS SECTION -->
+    <div id="remindersSection"
+      style="display:none; padding: 30px; border: 1px #ccc; margin: 20px; border-radius: 8px; background-color: var(--bg-color);">
+      <div style="margin-bottom: 20px; text-align: center;">
+        <input type="text" id="reminderContent" placeholder="Enter reminder..."
+          style="padding: 10px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px; width: 40%;background-color: var(--bg-color);color: var(--text-color);">
+        <input type="datetime-local" id="reminderTime"
+          style="padding: 10px; margin-right: 10px; border: 1px solid #dddddd29; border-radius: 4px;background-color: var(--bg-color);color: var(--text-color);">
+        <button onclick="saveReminder()"
+          style="padding: 10px 15px; background-color: #fbbc04; border: none; border-radius: 4px; cursor: pointer;">Save
+          Reminder</button>
       </div>
-    {% endfor %}
-  </div>
-</div>
+      <div id="remindersGrid" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
+        {% for reminder_id, reminder in reminders.items() %}
+        <div id="reminder-{{ reminder_id }}"
+          style="border: 1px solid #dddddd2d; border-radius: 8px; padding: 15px; background: var(--card-bg); width: 30%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.2s;">
+          <div style="margin-bottom: 10px; font-size: 16px; font-weight: bold;color: var(--text-color);">{{
+            reminder.content }}</div>
+          <div style="margin-bottom: 10px; font-size: 14px; color: var(--text-color);">{{ reminder.reminder_time }}
+          </div>
+          <button onclick="deleteReminder('{{ reminder_id }}')"
+            style="padding: 6px 10px; background-color: #e74c3c; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Delete</button>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
 
-<!-- EDIT LABELS SECTION -->
-<div id="editLabelsSection" style="display:none; padding: 30px; border: 1px #ccc; margin: 20px; border-radius: 8px; background-color:var(--bg-color);">
-  <div style="margin-bottom: 20px; text-align: center;">
-    <input type="text" id="labelName" placeholder="New label name" style="padding: 10px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px; width: 30%;background-color: var(--bg-color);color: var(--text-color);">
-    <input type="color" id="labelColor" value="#ffffff" style="padding: 4px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px;">
-    <button onclick="saveLabel()" style="padding: 10px 15px; background-color: #fbbc04; border: none; border-radius: 4px; cursor: pointer;">Add Label</button>
-  </div>
-  <div id="labelsList" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
-    {% for label_id, label in labels.items() %}
-      <div id="label-{{ label_id }}" style="padding: 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 8px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 30%;">
-        <span style="background-color: {{ label.color }}; padding: 6px 12px; border-radius: 4px; font-weight: bold; color: #fff;">{{ label.name }}</span>
-        <button onclick="deleteLabel('{{ label_id }}')" style="padding: 6px 10px; background-color: #e74c3c; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Delete</button>
+    <!-- EDIT LABELS SECTION -->
+    <div id="editLabelsSection"
+      style="display:none; padding: 30px; border: 1px #ccc; margin: 20px; border-radius: 8px; background-color:var(--bg-color);">
+      <div style="margin-bottom: 20px; text-align: center;">
+        <input type="text" id="labelName" placeholder="New label name"
+          style="padding: 10px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px; width: 30%;background-color: var(--bg-color);color: var(--text-color);">
+        <input type="color" id="labelColor" value="#ffffff"
+          style="padding: 4px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px;">
+        <button onclick="saveLabel()"
+          style="padding: 10px 15px; background-color: #fbbc04; border: none; border-radius: 4px; cursor: pointer;">Add
+          Label</button>
       </div>
-    {% endfor %}
-  </div>
-</div>
+      <div id="labelsList" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
+        {% for label_id, label in labels.items() %}
+        <div id="label-{{ label_id }}"
+          style="padding: 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 8px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 30%;">
+          <span
+            style="background-color: {{ label.color }}; padding: 6px 12px; border-radius: 4px; font-weight: bold; color: #fff;">{{
+            label.name }}</span>
+          <button onclick="deleteLabel('{{ label_id }}')"
+            style="padding: 6px 10px; background-color: #e74c3c; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Delete</button>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
 
   </main>
 
@@ -126,6 +151,13 @@
       <button id="clearChatBtn" title="Clear Chat">Clear Chat</button>
     </div>
     <div id="chatMessages"></div>
+    <!-- Add reply preview container -->
+    <div id="replyPreview"
+      style="display:none; background: #f0f0f0; padding: 8px; border-left: 4px solid #1a73e8; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;color: black;">
+      <!-- Reply preview text will be inserted here -->
+      <span id="replyText"></span>
+      <span onclick="cancelReply()" style="cursor:pointer; margin-left:10px; color: #888;">✖</span>
+    </div>
     <div id="chatInputContainer">
       <textarea id="chatInput" placeholder="Type a secret message..." rows="3"></textarea>
       <input type="file" id="chatFileInput" accept=".jpeg,.jpg,.png,.pdf" style="display:none;" />
@@ -136,78 +168,78 @@
 
   <script>
     // If you have a Socket.IO server, connect here. If not, you can remove these lines.
-    const socket = io();  
+    const socket = io();
     const sidebar = document.getElementById('sidebar');
     const notesGrid = document.getElementById('notesGrid');
     const noteInput = document.getElementById('noteInput');
     const chatSendBtn = document.getElementById('chatSendBtn');
-    
+
     // Sidebar toggle
     function toggleSidebar() {
       document.getElementById('sidebar').classList.toggle('active');
     }
 
     function showSection(section, element) {
-  // Remove active class from all sidebar links
-  document.querySelectorAll('.sidebar .nav-item').forEach(item => item.classList.remove('active'));
+      // Remove active class from all sidebar links
+      document.querySelectorAll('.sidebar .nav-item').forEach(item => item.classList.remove('active'));
 
-  // Hide all main sections
-  document.getElementById('notesSection').style.display = 'none';
-  document.getElementById('remindersSection').style.display = 'none';
-  document.getElementById('editLabelsSection').style.display = 'none';
+      // Hide all main sections
+      document.getElementById('notesSection').style.display = 'none';
+      document.getElementById('remindersSection').style.display = 'none';
+      document.getElementById('editLabelsSection').style.display = 'none';
 
-  // Show the selected section
-  if (section === 'notes') {
-    document.getElementById('notesSection').style.display = 'block';
-  } else if (section === 'reminders') {
-    document.getElementById('remindersSection').style.display = 'block';
-  } else if (section === 'editLabels') {
-    document.getElementById('editLabelsSection').style.display = 'block';
-  }
+      // Show the selected section
+      if (section === 'notes') {
+        document.getElementById('notesSection').style.display = 'block';
+      } else if (section === 'reminders') {
+        document.getElementById('remindersSection').style.display = 'block';
+      } else if (section === 'editLabels') {
+        document.getElementById('editLabelsSection').style.display = 'block';
+      }
 
-  // Set the clicked nav item as active
-  element.classList.add('active');
-}
+      // Set the clicked nav item as active
+      element.classList.add('active');
+    }
 
     // Save note (emits to Socket.IO, then adds locally)
     function saveNote() {
       const noteInput = document.getElementById('noteInput');
       const content = noteInput.value.trim();
-      if(content) {
+      if (content) {
         fetch('/api/notes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ content })
         })
-        .then(res => res.json())
-        .then(data => {
-          if(data.status === 'success') {
-            addNoteToGrid(data.note);
-            noteInput.value = '';
-          }
-        });
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 'success') {
+              addNoteToGrid(data.note);
+              noteInput.value = '';
+            }
+          });
       }
     }
 
     // Display new note in the grid
     function addNoteToGrid(note) {
-  // Prevent duplicate notes
-  if (document.getElementById('note-' + note.id)) return;
+      // Prevent duplicate notes
+      if (document.getElementById('note-' + note.id)) return;
 
-  const notesGrid = document.getElementById('notesGrid');
-  const noteEl = document.createElement('div');
-  noteEl.className = 'note-card';
-  noteEl.id = 'note-' + note.id;
-  
-  // If the note has a color property, apply it
-  if (note.color) {
-    noteEl.style.backgroundColor = note.color;
-  }
-  
-  // Store pinned state as a data attribute
-  noteEl.setAttribute('data-pinned', note.pinned ? 'true' : 'false');
-  
-  noteEl.innerHTML = `
+      const notesGrid = document.getElementById('notesGrid');
+      const noteEl = document.createElement('div');
+      noteEl.className = 'note-card';
+      noteEl.id = 'note-' + note.id;
+
+      // If the note has a color property, apply it
+      if (note.color) {
+        noteEl.style.backgroundColor = note.color;
+      }
+
+      // Store pinned state as a data attribute
+      noteEl.setAttribute('data-pinned', note.pinned ? 'true' : 'false');
+
+      noteEl.innerHTML = `
     <div class="note-content">${note.content}</div>
     <div class="note-footer">
       <span>${new Date(note.timestamp * 1000).toLocaleString()}</span>
@@ -217,140 +249,140 @@
         <button class="action-btn" title="Delete Note" onclick="deleteNote('${note.id}')">🗑️</button>
       </div>
     </div>`;
-  notesGrid.prepend(noteEl);
-}
+      notesGrid.prepend(noteEl);
+    }
 
 
-// Toggle the pinned state of a note
-function togglePin(noteId) {
-  const noteEl = document.getElementById('note-' + noteId);
-  // Retrieve current pinned state from the data attribute
-  let currentPinned = noteEl.getAttribute('data-pinned') === 'true';
-  let newPinned = !currentPinned;
-  
-  // Update the UI data attribute
-  noteEl.setAttribute('data-pinned', newPinned);
-  
-  // Optionally, update the pin icon (for example, you could change the icon text)
-  // Here we keep it simple and always show the same icon.
-  
-  // Update the note in Firebase via PUT request
-  fetch('/api/notes/' + noteId, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ pinned: newPinned })
-  });
-}
+    // Toggle the pinned state of a note
+    function togglePin(noteId) {
+      const noteEl = document.getElementById('note-' + noteId);
+      // Retrieve current pinned state from the data attribute
+      let currentPinned = noteEl.getAttribute('data-pinned') === 'true';
+      let newPinned = !currentPinned;
 
-// Change the note's background color
-function changeColor(noteId) {
-  const noteEl = document.getElementById('note-' + noteId);
-  
-  // Ensure the note element is positioned relatively so the overlay positions correctly
-  noteEl.style.position = 'relative';
+      // Update the UI data attribute
+      noteEl.setAttribute('data-pinned', newPinned);
 
-  // Create a color picker overlay div
-  const picker = document.createElement('div');
-  picker.style.position = 'absolute';
-  picker.style.top = '10px';
-  picker.style.right = '10px';
-  picker.style.backgroundColor = '#fff';
-  picker.style.border = '1px solid #ddd';
-  picker.style.borderRadius = '4px';
-  picker.style.padding = '5px';
-  picker.style.display = 'flex';
-  picker.style.gap = '5px';
-  picker.style.zIndex = '10';
+      // Optionally, update the pin icon (for example, you could change the icon text)
+      // Here we keep it simple and always show the same icon.
 
-  // Create yellow button
-  const yellowBtn = document.createElement('button');
-  yellowBtn.style.backgroundColor = '#fbbc04'; // yellow
-  yellowBtn.style.color = '#fff';
-  yellowBtn.style.border = 'none';
-  yellowBtn.style.padding = '5px 10px';
-  yellowBtn.style.borderRadius = '4px';
-  yellowBtn.style.cursor = 'pointer';
-  yellowBtn.textContent = 'Yellow';
-  yellowBtn.onclick = function() {
-    // Update UI color
-    noteEl.style.backgroundColor = '#fbbc04';
-    // Update Firebase with the new color
-    fetch('/api/notes/' + noteId, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ color: '#fbbc04' })
-    });
-    // Remove the picker overlay
-    noteEl.removeChild(picker);
-  };
+      // Update the note in Firebase via PUT request
+      fetch('/api/notes/' + noteId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pinned: newPinned })
+      });
+    }
 
-  // Create pink button
-  const pinkBtn = document.createElement('button');
-  pinkBtn.style.backgroundColor = '#ff4081'; // pink
-  pinkBtn.style.color = '#fff';
-  pinkBtn.style.border = 'none';
-  pinkBtn.style.padding = '5px 10px';
-  pinkBtn.style.borderRadius = '4px';
-  pinkBtn.style.cursor = 'pointer';
-  pinkBtn.textContent = 'Pink';
-  pinkBtn.onclick = function() {
-    // Update UI color
-    noteEl.style.backgroundColor = '#ff4081';
-    // Update Firebase with the new color
-    fetch('/api/notes/' + noteId, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ color: '#ff4081' })
-    });
-    // Remove the picker overlay
-    noteEl.removeChild(picker);
-  };
+    // Change the note's background color
+    function changeColor(noteId) {
+      const noteEl = document.getElementById('note-' + noteId);
 
-  // Append the buttons to the picker overlay
-  picker.appendChild(yellowBtn);
-  picker.appendChild(pinkBtn);
+      // Ensure the note element is positioned relatively so the overlay positions correctly
+      noteEl.style.position = 'relative';
 
-  // Remove any existing picker first
-  const existingPicker = noteEl.querySelector('.color-picker-overlay');
-  if (existingPicker) {
-    noteEl.removeChild(existingPicker);
-  }
-  
-  // Optionally assign a class for easier future styling
-  picker.className = 'color-picker-overlay';
+      // Create a color picker overlay div
+      const picker = document.createElement('div');
+      picker.style.position = 'absolute';
+      picker.style.top = '10px';
+      picker.style.right = '10px';
+      picker.style.backgroundColor = '#fff';
+      picker.style.border = '1px solid #ddd';
+      picker.style.borderRadius = '4px';
+      picker.style.padding = '5px';
+      picker.style.display = 'flex';
+      picker.style.gap = '5px';
+      picker.style.zIndex = '10';
 
-  // Append the picker overlay to the note card
-  noteEl.appendChild(picker);
-}
+      // Create yellow button
+      const yellowBtn = document.createElement('button');
+      yellowBtn.style.backgroundColor = '#fbbc04'; // yellow
+      yellowBtn.style.color = '#fff';
+      yellowBtn.style.border = 'none';
+      yellowBtn.style.padding = '5px 10px';
+      yellowBtn.style.borderRadius = '4px';
+      yellowBtn.style.cursor = 'pointer';
+      yellowBtn.textContent = 'Yellow';
+      yellowBtn.onclick = function () {
+        // Update UI color
+        noteEl.style.backgroundColor = '#fbbc04';
+        // Update Firebase with the new color
+        fetch('/api/notes/' + noteId, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ color: '#fbbc04' })
+        });
+        // Remove the picker overlay
+        noteEl.removeChild(picker);
+      };
+
+      // Create pink button
+      const pinkBtn = document.createElement('button');
+      pinkBtn.style.backgroundColor = '#ff4081'; // pink
+      pinkBtn.style.color = '#fff';
+      pinkBtn.style.border = 'none';
+      pinkBtn.style.padding = '5px 10px';
+      pinkBtn.style.borderRadius = '4px';
+      pinkBtn.style.cursor = 'pointer';
+      pinkBtn.textContent = 'Pink';
+      pinkBtn.onclick = function () {
+        // Update UI color
+        noteEl.style.backgroundColor = '#ff4081';
+        // Update Firebase with the new color
+        fetch('/api/notes/' + noteId, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ color: '#ff4081' })
+        });
+        // Remove the picker overlay
+        noteEl.removeChild(picker);
+      };
+
+      // Append the buttons to the picker overlay
+      picker.appendChild(yellowBtn);
+      picker.appendChild(pinkBtn);
+
+      // Remove any existing picker first
+      const existingPicker = noteEl.querySelector('.color-picker-overlay');
+      if (existingPicker) {
+        noteEl.removeChild(existingPicker);
+      }
+
+      // Optionally assign a class for easier future styling
+      picker.className = 'color-picker-overlay';
+
+      // Append the picker overlay to the note card
+      noteEl.appendChild(picker);
+    }
 
     function deleteNote(noteId) {
       fetch('/api/notes/' + noteId, { method: 'DELETE' })
-      .then(res => res.json())
-      .then(data => {
-        if(data.status === 'success') {
-          const noteEl = document.getElementById('note-' + noteId);
-          if(noteEl) noteEl.remove();
-        }
-      });
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            const noteEl = document.getElementById('note-' + noteId);
+            if (noteEl) noteEl.remove();
+          }
+        });
     }
 
     function saveReminder() {
       const content = document.getElementById('reminderContent').value.trim();
       const reminderTime = document.getElementById('reminderTime').value;
-      if(content && reminderTime) {
+      if (content && reminderTime) {
         fetch('/api/reminders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ content, reminder_time: reminderTime })
         })
-        .then(res => res.json())
-        .then(data => {
-          if(data.status === 'success') {
-            addReminderToGrid(data.reminder);
-            document.getElementById('reminderContent').value = '';
-            document.getElementById('reminderTime').value = '';
-          }
-        });
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 'success') {
+              addReminderToGrid(data.reminder);
+              document.getElementById('reminderContent').value = '';
+              document.getElementById('reminderTime').value = '';
+            }
+          });
       }
     }
 
@@ -368,16 +400,16 @@ function changeColor(noteId) {
 
     function deleteReminder(reminderId) {
       fetch('/api/reminders/' + reminderId, { method: 'DELETE' })
-      .then(res => res.json())
-      .then(data => {
-        if(data.status === 'success') {
-          const remEl = document.getElementById('reminder-' + reminderId);
-          if(remEl) remEl.remove();
-        }
-      });
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            const remEl = document.getElementById('reminder-' + reminderId);
+            if (remEl) remEl.remove();
+          }
+        });
     }
 
-    
+
     // Receive a note from server (if using Socket.IO)
     socket.on('receive_note', (note) => {
       addNoteToGrid(note);
@@ -396,19 +428,19 @@ function changeColor(noteId) {
     function saveLabel() {
       const name = document.getElementById('labelName').value.trim();
       const color = document.getElementById('labelColor').value;
-      if(name) {
+      if (name) {
         fetch('/api/labels', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, color })
         })
-        .then(res => res.json())
-        .then(data => {
-          if(data.status === 'success') {
-            addLabelToList(data.label);
-            document.getElementById('labelName').value = '';
-          }
-        });
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 'success') {
+              addLabelToList(data.label);
+              document.getElementById('labelName').value = '';
+            }
+          });
       }
     }
 
@@ -424,13 +456,13 @@ function changeColor(noteId) {
 
     function deleteLabel(labelId) {
       fetch('/api/labels/' + labelId, { method: 'DELETE' })
-      .then(res => res.json())
-      .then(data => {
-        if(data.status === 'success') {
-          const labelEl = document.getElementById('label-' + labelId);
-          if(labelEl) labelEl.remove();
-        }
-      });
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            const labelEl = document.getElementById('label-' + labelId);
+            if (labelEl) labelEl.remove();
+          }
+        });
     }
 
 
@@ -443,14 +475,14 @@ function changeColor(noteId) {
     // Toggle secret chat on double-clicking the header title
     headerTitle.addEventListener('dblclick', toggleChat);
     function toggleChat() {
-      chatContainer.style.display = 
-        chatContainer.style.display === 'none' || chatContainer.style.display === '' 
-          ? 'flex' 
+      chatContainer.style.display =
+        chatContainer.style.display === 'none' || chatContainer.style.display === ''
+          ? 'flex'
           : 'none';
     }
 
     // Send message on Enter (without shift)
-    chatInput.addEventListener('keydown', function(e) {
+    chatInput.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendChatMessage();
@@ -460,13 +492,25 @@ function changeColor(noteId) {
     chatSendBtn.addEventListener('click', sendChatMessage);
 
     function sendChatMessage() {
+      const chatInput = document.getElementById('chatInput');
       const messageText = chatInput.value.trim();
+
       if (messageText) {
+        // Build message data with reply details if applicable
         const messageData = { message: messageText };
-        socket.emit('send_message', messageData); // Remove if no real-time
+        if (replyToMsgId) {
+          messageData.reply_to = replyToMsgId;
+          messageData.reply_text = replyToMsgSnippet;
+        }
+
+        socket.emit('send_message', messageData);
         chatInput.value = '';
+
+        // Clear the reply preview after sending
+        cancelReply();
       }
     }
+
 
     // Receive incoming message
     socket.on('receive_message', (msg) => {
@@ -474,56 +518,113 @@ function changeColor(noteId) {
     });
 
     function addMessageToChat(msg) {
-      const msgEl = document.createElement('div');
-      msgEl.classList.add('chat-message');
-      let messageText = (msg.type === 'file' && msg.file_url) ? 'File Message' : msg.content;
-      msgEl.setAttribute('data-msg', messageText);
+  const msgEl = document.createElement('div');
+  msgEl.classList.add('chat-message');
+  msgEl.id = 'chat-msg-' + msg.id;
+  let messageText = (msg.type === 'file' && msg.file_url) ? 'File Message' : msg.content;
+  msgEl.setAttribute('data-msg', messageText);
 
-      const timestampEl = document.createElement('div');
-      timestampEl.classList.add('timestamp');
-      timestampEl.textContent = new Date(msg.timestamp * 1000).toLocaleTimeString();
+  // Create the timestamp element
+  const timestampEl = document.createElement('div');
+  timestampEl.classList.add('timestamp');
+  timestampEl.textContent = new Date(msg.timestamp * 1000).toLocaleTimeString();
 
-      const contentEl = document.createElement('div');
-      contentEl.classList.add('message-content');
+  // Create a container for the message content
+  const contentContainer = document.createElement('div');
+  contentContainer.classList.add('message-container');
 
-      if (msg.type === 'file' && msg.file_url) {
-        // Show image or PDF link
-        if (/\.(jpeg|jpg|png)$/i.test(msg.file_url)) {
-          contentEl.innerHTML = `
-            <img src="${msg.file_url}" alt="Image preview" style="max-width:100%; border-radius:5px;"/><br>
-            <button onclick="downloadFile('${msg.file_url}')" style="background: var(--primary-color);border: none;color: #fff;border-radius: 20px;padding: 3px 3px;">Download</button>`;
-        } else if (/\.pdf$/i.test(msg.file_url)) {
-          contentEl.innerHTML = `
-            <a href="${msg.file_url}" target="_blank" download>View PDF</a><br>
-            <button onclick="downloadFile('${msg.file_url}')">Download</button>`;
-        } else {
-          contentEl.innerHTML = `📎 <a href="${msg.file_url}" target="_blank" download>Download file</a>`;
-        }
-      } else {
-        contentEl.textContent = msg.content;
-      }
+  // If this message is a reply, add a reply preview
+  if (msg.reply_text) {
+    const replyPreview = document.createElement('div');
+    replyPreview.classList.add('reply-preview');
+    // Style the reply preview (you can also move these styles to your CSS)
+    replyPreview.style.fontStyle = 'italic';
+    replyPreview.style.fontSize = '12px';
+    replyPreview.style.marginBottom = '4px';
+    replyPreview.style.color = '#555';
+    replyPreview.textContent = "Replying to: " + msg.reply_text;
+    contentContainer.appendChild(replyPreview);
+  }
 
-      const replyBtn = document.createElement('button');
-      replyBtn.classList.add('reply-btn');
-      replyBtn.textContent = 'Reply';
-      replyBtn.addEventListener('click', function () {
-        replyToMessage(msgEl);
-      });
-
-      msgEl.appendChild(timestampEl);
-      msgEl.appendChild(contentEl);
-      msgEl.appendChild(replyBtn);
-
-      chatMessages.appendChild(msgEl);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+  // Create the actual message content element
+  const contentEl = document.createElement('div');
+  contentEl.classList.add('message-content');
+  if (msg.type === 'file' && msg.file_url) {
+    if (/\.(jpeg|jpg|png)$/i.test(msg.file_url)) {
+      contentEl.innerHTML = `
+        <img src="${msg.file_url}" alt="Image preview" style="max-width:100%; border-radius:5px;"/>
+        <br>
+        <button onclick="downloadFile('${msg.file_url}')" style="background: var(--primary-color); border: none; color: #fff; border-radius: 20px; padding: 3px;">Download</button>`;
+    } else if (/\.pdf$/i.test(msg.file_url)) {
+      contentEl.innerHTML = `
+        <a href="${msg.file_url}" target="_blank" download>View PDF</a>
+        <br>
+        <button onclick="downloadFile('${msg.file_url}')">Download</button>`;
+    } else {
+      contentEl.innerHTML = `📎 <a href="${msg.file_url}" target="_blank" download>Download file</a>`;
     }
+  } else {
+    contentEl.textContent = msg.content;
+  }
+  contentContainer.appendChild(contentEl);
+
+  // Create the delete button (placed on the left)
+  const deleteBtn = document.createElement('button');
+  deleteBtn.classList.add('delete-btn');
+  deleteBtn.textContent = 'Delete';
+  deleteBtn.addEventListener('click', function () {
+    deleteChatMessage(msg.id);
+  });
+
+  // Create the reply button (placed on the right)
+  const replyBtn = document.createElement('button');
+  replyBtn.classList.add('reply-btn');
+  replyBtn.textContent = 'Reply';
+  replyBtn.addEventListener('click', function () {
+    replyToMessage(msgEl);
+  });
+
+  // Create a container for the action buttons using flex layout
+  const btnContainer = document.createElement('div');
+  btnContainer.classList.add('chat-action-buttons');
+  btnContainer.style.display = 'flex';
+  btnContainer.style.justifyContent = 'space-between';
+  btnContainer.style.alignItems = 'center';
+  btnContainer.style.marginTop = '6px';
+
+  // Append delete button first (left) then reply button (right)
+  btnContainer.appendChild(deleteBtn);
+  btnContainer.appendChild(replyBtn);
+
+  // Append all elements to the main message element
+  msgEl.appendChild(timestampEl);
+  msgEl.appendChild(contentContainer);
+  msgEl.appendChild(btnContainer);
+
+  chatMessages.appendChild(msgEl);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+    function deleteChatMessage(messageId) {
+      // Optionally, add confirmation before deletion
+
+      socket.emit('delete_message', { id: messageId });
+
+    }
+    socket.on('message_deleted', function (messageId) {
+      const messageElement = document.getElementById('chat-msg-' + messageId);
+      if (messageElement) {
+        messageElement.remove();
+      }
+    });
+
 
     // File sending (optional if using real-time file chat)
     document.getElementById('chatFileBtn').addEventListener('click', () => {
       document.getElementById('chatFileInput').click();
     });
 
-    document.getElementById('chatFileInput').addEventListener('change', function() {
+    document.getElementById('chatFileInput').addEventListener('change', function () {
       const file = this.files[0];
       if (file) {
         socket.emit('send_file', { file: file });
@@ -549,27 +650,55 @@ function changeColor(noteId) {
       document.body.removeChild(a);
     }
 
+    let replyToMsgId = null;
+    let replyToMsgSnippet = null;
+
     function replyToMessage(msgElement) {
       const msgText = msgElement.getAttribute('data-msg');
-      chatInput.value = `Replying to message: ${msgText}\n`;
-      chatInput.focus();
+      // Create a truncated version (limit to 50 characters)
+      const snippet = msgText.length > 50 ? msgText.substring(0, 50) + "..." : msgText;
+
+      // Set and show the reply preview above the chat input
+      document.getElementById('replyText').textContent = "Replying to: " + snippet;
+      document.getElementById('replyPreview').style.display = 'block';
+
+      // Store reply reference details
+      replyToMsgId = msgElement.id.replace('chat-msg-', '');
+      replyToMsgSnippet = snippet;
+
+      document.getElementById('chatInput').focus();
+    }
+
+    function cancelReply() {
+      document.getElementById('replyPreview').style.display = 'none';
+      document.getElementById('replyText').textContent = "";
+      replyToMsgId = null;
+      replyToMsgSnippet = null;
+    }
+
+    function cancelReply() {
+      // Hide the reply preview and clear any stored reply data
+      document.getElementById('replyPreview').style.display = 'none';
+      document.getElementById('replyText').textContent = "";
+      replyToMsgId = null;
     }
 
     // Dark Mode Toggle
     function toggleDarkMode() {
-  document.body.classList.toggle('dark-mode');
-  // Save the state to localStorage
-  if (document.body.classList.contains('dark-mode')) {
-    localStorage.setItem('darkMode', 'true');
-  } else {
-    localStorage.setItem('darkMode', 'false');
-  }
-}
-window.addEventListener('load', () => {
-  if (localStorage.getItem('darkMode') === 'true') {
-    document.body.classList.add('dark-mode');
-  }
-});
+      document.body.classList.toggle('dark-mode');
+      // Save the state to localStorage
+      if (document.body.classList.contains('dark-mode')) {
+        localStorage.setItem('darkMode', 'true');
+      } else {
+        localStorage.setItem('darkMode', 'false');
+      }
+    }
+    window.addEventListener('load', () => {
+      if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+      }
+    });
   </script>
 </body>
+
 </html>
