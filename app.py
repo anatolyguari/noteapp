@@ -54,6 +54,7 @@ def index():
     labels = labels_ref.get() or {}
     return render_template('index.html', notes=notes, reminders=reminders, labels=labels)
 
+
 # NOTES ENDPOINTS
 @app.route('/api/notes', methods=['GET', 'POST'])
 def handle_notes():
@@ -68,7 +69,7 @@ def handle_notes():
         note["id"] = note_id
 
         # Emit the new note to all connected clients in realtime
-        socketio.emit('receive_note', note, broadcast=True)
+        socketio.emit('receive_note', note)
 
         return jsonify({"status": "success", "note": note})
     else:
@@ -83,6 +84,8 @@ def handle_note(note_id):
         return jsonify({"status": "success"})
     else:
         notes_ref.child(note_id).delete()
+        # Emit an event to notify all connected clients to remove this note
+        socketio.emit('note_deleted', note_id)
         return jsonify({"status": "success"})
 
 # REMINDERS ENDPOINTS
@@ -201,7 +204,7 @@ def handle_connect():
 def handle_clear_chat():
     messages_ref.delete()
     emit('clear_chat', broadcast=True)
-    
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     socketio.run(app, debug=True, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
