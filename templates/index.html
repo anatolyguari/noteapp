@@ -205,21 +205,38 @@
     function saveNote() {
       const noteInput = document.getElementById('noteInput');
       const content = noteInput.value.trim();
-      if (content) {
-        fetch('/api/notes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content })
-        })
-          .then(res => res.json())
-          .then(data => {
-            if (data.status === 'success') {
-              addNoteToGrid(data.note);
-              noteInput.value = '';
-            }
-          });
+
+      if (!content) {
+        alert("Please enter some content for the note.");
+        return;
       }
+
+      fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+      })
+        .then(res => {
+          if (!res.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return res.json();
+        })
+        .then(data => {
+          console.log("Note saved successfully:", data);
+          if (data.status === 'success') {
+            addNoteToGrid(data.note);
+            noteInput.value = '';
+          } else {
+            alert("Error saving note: " + (data.message || "Unknown error"));
+          }
+        })
+        .catch(err => {
+          console.error("Error saving note:", err);
+          alert("Error saving note. Check console for details.");
+        });
     }
+
 
     // Display new note in the grid
     function addNoteToGrid(note) {
@@ -518,92 +535,92 @@
     });
 
     function addMessageToChat(msg) {
-  const msgEl = document.createElement('div');
-  msgEl.classList.add('chat-message');
-  msgEl.id = 'chat-msg-' + msg.id;
-  let messageText = (msg.type === 'file' && msg.file_url) ? 'File Message' : msg.content;
-  msgEl.setAttribute('data-msg', messageText);
+      const msgEl = document.createElement('div');
+      msgEl.classList.add('chat-message');
+      msgEl.id = 'chat-msg-' + msg.id;
+      let messageText = (msg.type === 'file' && msg.file_url) ? 'File Message' : msg.content;
+      msgEl.setAttribute('data-msg', messageText);
 
-  // Create the timestamp element
-  const timestampEl = document.createElement('div');
-  timestampEl.classList.add('timestamp');
-  timestampEl.textContent = new Date(msg.timestamp * 1000).toLocaleTimeString();
+      // Create the timestamp element
+      const timestampEl = document.createElement('div');
+      timestampEl.classList.add('timestamp');
+      timestampEl.textContent = new Date(msg.timestamp * 1000).toLocaleTimeString();
 
-  // Create a container for the message content
-  const contentContainer = document.createElement('div');
-  contentContainer.classList.add('message-container');
+      // Create a container for the message content
+      const contentContainer = document.createElement('div');
+      contentContainer.classList.add('message-container');
 
-  // If this message is a reply, add a reply preview
-  if (msg.reply_text) {
-    const replyPreview = document.createElement('div');
-    replyPreview.classList.add('reply-preview');
-    // Style the reply preview (you can also move these styles to your CSS)
-    replyPreview.style.fontStyle = 'italic';
-    replyPreview.style.fontSize = '12px';
-    replyPreview.style.marginBottom = '4px';
-    replyPreview.style.color = '#555';
-    replyPreview.textContent = "Replying to: " + msg.reply_text;
-    contentContainer.appendChild(replyPreview);
-  }
+      // If this message is a reply, add a reply preview
+      if (msg.reply_text) {
+        const replyPreview = document.createElement('div');
+        replyPreview.classList.add('reply-preview');
+        // Style the reply preview (you can also move these styles to your CSS)
+        replyPreview.style.fontStyle = 'italic';
+        replyPreview.style.fontSize = '12px';
+        replyPreview.style.marginBottom = '4px';
+        replyPreview.style.color = '#555';
+        replyPreview.textContent = "Replying to: " + msg.reply_text;
+        contentContainer.appendChild(replyPreview);
+      }
 
-  // Create the actual message content element
-  const contentEl = document.createElement('div');
-  contentEl.classList.add('message-content');
-  if (msg.type === 'file' && msg.file_url) {
-    if (/\.(jpeg|jpg|png)$/i.test(msg.file_url)) {
-      contentEl.innerHTML = `
+      // Create the actual message content element
+      const contentEl = document.createElement('div');
+      contentEl.classList.add('message-content');
+      if (msg.type === 'file' && msg.file_url) {
+        if (/\.(jpeg|jpg|png)$/i.test(msg.file_url)) {
+          contentEl.innerHTML = `
         <img src="${msg.file_url}" alt="Image preview" style="max-width:100%; border-radius:5px;"/>
         <br>
         <button onclick="downloadFile('${msg.file_url}')" style="background: var(--primary-color); border: none; color: #fff; border-radius: 20px; padding: 3px;">Download</button>`;
-    } else if (/\.pdf$/i.test(msg.file_url)) {
-      contentEl.innerHTML = `
+        } else if (/\.pdf$/i.test(msg.file_url)) {
+          contentEl.innerHTML = `
         <a href="${msg.file_url}" target="_blank" download>View PDF</a>
         <br>
         <button onclick="downloadFile('${msg.file_url}')">Download</button>`;
-    } else {
-      contentEl.innerHTML = `📎 <a href="${msg.file_url}" target="_blank" download>Download file</a>`;
+        } else {
+          contentEl.innerHTML = `📎 <a href="${msg.file_url}" target="_blank" download>Download file</a>`;
+        }
+      } else {
+        contentEl.textContent = msg.content;
+      }
+      contentContainer.appendChild(contentEl);
+
+      // Create the delete button (placed on the left)
+      const deleteBtn = document.createElement('button');
+      deleteBtn.classList.add('delete-btn');
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', function () {
+        deleteChatMessage(msg.id);
+      });
+
+      // Create the reply button (placed on the right)
+      const replyBtn = document.createElement('button');
+      replyBtn.classList.add('reply-btn');
+      replyBtn.textContent = 'Reply';
+      replyBtn.addEventListener('click', function () {
+        replyToMessage(msgEl);
+      });
+
+      // Create a container for the action buttons using flex layout
+      const btnContainer = document.createElement('div');
+      btnContainer.classList.add('chat-action-buttons');
+      btnContainer.style.display = 'flex';
+      btnContainer.style.justifyContent = 'space-between';
+      btnContainer.style.alignItems = 'center';
+      btnContainer.style.marginTop = '6px';
+
+      // Append delete button first (left) then reply button (right)
+      btnContainer.appendChild(deleteBtn);
+      btnContainer.appendChild(replyBtn);
+
+      // Append all elements to the main message element
+      msgEl.appendChild(timestampEl);
+      msgEl.appendChild(contentContainer);
+      msgEl.appendChild(btnContainer);
+
+      chatMessages.appendChild(msgEl);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
     }
-  } else {
-    contentEl.textContent = msg.content;
-  }
-  contentContainer.appendChild(contentEl);
-
-  // Create the delete button (placed on the left)
-  const deleteBtn = document.createElement('button');
-  deleteBtn.classList.add('delete-btn');
-  deleteBtn.textContent = 'Delete';
-  deleteBtn.addEventListener('click', function () {
-    deleteChatMessage(msg.id);
-  });
-
-  // Create the reply button (placed on the right)
-  const replyBtn = document.createElement('button');
-  replyBtn.classList.add('reply-btn');
-  replyBtn.textContent = 'Reply';
-  replyBtn.addEventListener('click', function () {
-    replyToMessage(msgEl);
-  });
-
-  // Create a container for the action buttons using flex layout
-  const btnContainer = document.createElement('div');
-  btnContainer.classList.add('chat-action-buttons');
-  btnContainer.style.display = 'flex';
-  btnContainer.style.justifyContent = 'space-between';
-  btnContainer.style.alignItems = 'center';
-  btnContainer.style.marginTop = '6px';
-
-  // Append delete button first (left) then reply button (right)
-  btnContainer.appendChild(deleteBtn);
-  btnContainer.appendChild(replyBtn);
-
-  // Append all elements to the main message element
-  msgEl.appendChild(timestampEl);
-  msgEl.appendChild(contentContainer);
-  msgEl.appendChild(btnContainer);
-
-  chatMessages.appendChild(msgEl);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
 
     function deleteChatMessage(messageId) {
       // Optionally, add confirmation before deletion
@@ -617,7 +634,12 @@
         messageElement.remove();
       }
     });
-
+    socket.on('note_deleted', function (noteId) {
+      const noteEl = document.getElementById('note-' + noteId);
+      if (noteEl) {
+        noteEl.remove();
+      }
+    });
 
     // File sending (optional if using real-time file chat)
     document.getElementById('chatFileBtn').addEventListener('click', () => {
