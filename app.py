@@ -7,31 +7,23 @@ import cloudinary.uploader
 import time
 from datetime import datetime
 import os
-import json
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Initialize Firebase credentials securely
-firebase_creds = os.environ.get("FIREBASE_CREDENTIALS")
-if firebase_creds:
-    # Load credentials from the environment variable (as a JSON string)
-    cred_info = json.loads(firebase_creds)
-    cred = credentials.Certificate(cred_info)
-else:
-    # Fallback to local file (ensure this file is in your .gitignore)
-    cred = credentials.Certificate("firebase_credentials.json")
-
+# Initialize Firebase
+cred = credentials.Certificate("firebase_credentials.json")
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://rahilshaikh-6d1f2-default-rtdb.firebaseio.com/'
 })
 
-# Initialize Firebase references
-messages_ref = db.reference("messages")
-notes_ref = db.reference("notes")
+# Firebase references
+messages_ref  = db.reference("messages")
+notes_ref     = db.reference("notes")
+reminders_ref = db.reference("reminders")
+labels_ref    = db.reference("labels")
 
-# Cloudinary Setup (consider using environment variables for these too)
+# Cloudinary Setup (using your credentials)
 cloudinary.config(
     cloud_name="dejlyocyq",
     api_key="612143172989225",
@@ -39,11 +31,20 @@ cloudinary.config(
     secure=True
 )
 
+# Custom Jinja filter to format timestamps
+@app.template_filter('datetimeformat')
+def datetimeformat(value):
+    return datetime.fromtimestamp(value).strftime('%Y-%m-%d %H:%M')
+
+# Pass data to the template so items persist on refresh
 @app.route('/')
 def index():
-    return render_template('index.html')
+    notes = notes_ref.get() or {}
+    reminders = reminders_ref.get() or {}
+    labels = labels_ref.get() or {}
+    return render_template('index.html', notes=notes, reminders=reminders, labels=labels)
 
-# Note handling
+# NOTES ENDPOINTS
 @app.route('/api/notes', methods=['GET', 'POST'])
 def handle_notes():
     if request.method == 'POST':
@@ -53,8 +54,9 @@ def handle_notes():
             "timestamp": time.time(),
             "pinned": data.get("pinned", False)
         }
-        notes_ref.push(note)
-        return jsonify({"status": "success"})
+        note_id = notes_ref.push(note).key
+        note["id"] = note_id
+        return jsonify({"status": "success", "note": note})
     else:
         notes = notes_ref.get()
         return jsonify(notes if notes else {})
@@ -69,7 +71,60 @@ def handle_note(note_id):
         notes_ref.child(note_id).delete()
         return jsonify({"status": "success"})
 
-# Socket.IO chat events
+# REMINDERS ENDPOINTS
+@app.route('/api/reminders', methods=['GET', 'POST'])
+def handle_reminders():
+    if request.method == 'POST':
+        data = request.json
+        reminder = {
+            "content": data["content"],
+            "reminder_time": data["reminder_time"],
+            "timestamp": time.time()
+        }
+        reminder_id = reminders_ref.push(reminder).key
+        reminder["id"] = reminder_id
+        return jsonify({"status": "success", "reminder": reminder})
+    else:
+        reminders = reminders_ref.get()
+        return jsonify(reminders if reminders else {})
+
+@app.route('/api/reminders/<reminder_id>', methods=['PUT', 'DELETE'])
+def handle_reminder(reminder_id):
+    if request.method == 'PUT':
+        data = request.json
+        reminders_ref.child(reminder_id).update(data)
+        return jsonify({"status": "success"})
+    else:
+        reminders_ref.child(reminder_id).delete()
+        return jsonify({"status": "success"})
+
+# LABELS ENDPOINTS
+@app.route('/api/labels', methods=['GET', 'POST'])
+def handle_labels():
+    if request.method == 'POST':
+        data = request.json
+        label = {
+            "name": data["name"],
+            "color": data.get("color", "#ffffff")
+        }
+        label_id = labels_ref.push(label).key
+        label["id"] = label_id
+        return jsonify({"status": "success", "label": label})
+    else:
+        labels = labels_ref.get()
+        return jsonify(labels if labels else {})
+
+@app.route('/api/labels/<label_id>', methods=['PUT', 'DELETE'])
+def handle_label(label_id):
+    if request.method == 'PUT':
+        data = request.json
+        labels_ref.child(label_id).update(data)
+        return jsonify({"status": "success"})
+    else:
+        labels_ref.child(label_id).delete()
+        return jsonify({"status": "success"})
+
+# SOCKET.IO EVENTS (for chat features – unchanged)
 @socketio.on('send_message')
 def handle_send_message(data):
     message = {
@@ -102,14 +157,12 @@ def handle_send_file(data):
 
 @socketio.on('connect')
 def handle_connect():
-    # Send existing messages
     messages = messages_ref.get()
     if messages:
         for msg_id, msg in messages.items():
             msg["id"] = msg_id
             emit('receive_message', msg)
     
-    # Send existing notes
     notes = notes_ref.get()
     if notes:
         for note_id, note in notes.items():
@@ -118,9 +171,7 @@ def handle_connect():
 
 @socketio.on('clear_chat')
 def handle_clear_chat():
-    # Delete all messages from the Firebase "messages" reference
     messages_ref.delete()
-    # Broadcast a clear_chat event to all connected clients
     emit('clear_chat', broadcast=True)
 
 if __name__ == '__main__':
