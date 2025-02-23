@@ -76,7 +76,7 @@
         {% for note_id, note in notes.items() %}
         <div class="note-card" id="note-{{ note_id }}" {% if note.color %} style="background-color: {{ note.color }};"
           {% endif %}>
-          <div class="note-content">{{ note.content }}</div>
+          <div class="note-content" style="white-space: pre-wrap;">{{ note.content }}</div>
           <div class="note-footer">
             <span>{{ note.timestamp | datetimeformat }}</span>
             <div>
@@ -151,6 +151,8 @@
       <button id="clearChatBtn" title="Clear Chat">Clear Chat</button>
     </div>
     <div id="chatMessages"></div>
+
+    <div id="typingStatus" style="display: none; font-style: italic; font-size: 12px; color: #888; margin: 4px 8px;"></div>
     <!-- Add reply preview container -->
     <div id="replyPreview"
       style="display:none; background: #f0f0f0; padding: 8px; border-left: 4px solid #1a73e8; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;color: black;">
@@ -720,6 +722,32 @@
         document.body.classList.add('dark-mode');
       }
     });
+
+    let typingTimeout;
+
+chatInput.addEventListener('input', function() {
+    // Emit a typing event with isTyping true
+    socket.emit('typing', { isTyping: true });
+    // Clear any previous timeout to avoid flooding the server
+    clearTimeout(typingTimeout);
+    // Set a timeout to emit isTyping false after 2 seconds of inactivity
+    typingTimeout = setTimeout(function() {
+        socket.emit('typing', { isTyping: false });
+    }, 2000);
+});
+
+
+    socket.on('typing_status', function(data) {
+    const typingStatusEl = document.getElementById('typingStatus');
+    if (data.isTyping) {
+        typingStatusEl.style.display = 'block';
+        typingStatusEl.textContent = 'Someone is typing...';
+    } else {
+        typingStatusEl.style.display = 'none';
+        typingStatusEl.textContent = '';
+    }
+});
+   
   </script>
 </body>
 
