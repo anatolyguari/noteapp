@@ -421,3 +421,71 @@
     font-size: 18px;
     color: var(--primary-color);
   }
+
+  @media (max-width: 600px) {
+    /* Mobile-friendly Secret Chat */
+    #chatContainer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      top: 20%; /* Covers 80% of the screen height */
+      width: 100%;
+      height: auto;
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+  
+    #chatHeader {
+      padding: 12px 16px;
+      font-size: 18px;
+      text-align: center;
+    }
+  
+    #chatMessages {
+      padding: 12px;
+      overflow-y: auto;
+      max-height: calc(100% - 110px); /* Leaves room for input container */
+    }
+  
+    #chatInputContainer {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 10px 12px;
+      border-top: 1px solid var(--border-color);
+      background: var(--card-bg);
+    }
+  
+    #chatInput {
+      flex: 1;
+      height: 40px;
+      font-size: 16px;
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      margin-right: 8px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+  
+    #chatSendBtn, #chatFileBtn {
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+  
+    #chatFileBtn {
+      font-size: 20px;
+      margin-right: 8px;
+    }
+  
+    #clearChatBtn {
+      font-size: 14px;
+      padding: 6px 10px;
+    }
+  }
+  
