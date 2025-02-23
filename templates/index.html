@@ -531,11 +531,6 @@
     }
 
 
-    // Receive incoming message
-    socket.on('receive_message', (msg) => {
-      addMessageToChat(msg);
-    });
-
     function addMessageToChat(msg) {
       const msgEl = document.createElement('div');
       msgEl.classList.add('chat-message');
@@ -747,6 +742,31 @@ chatInput.addEventListener('input', function() {
         typingStatusEl.textContent = '';
     }
 });
+
+if ("Notification" in window) {
+  if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+    Notification.requestPermission();
+  }
+}
+socket.on('receive_message', (msg) => {
+  addMessageToChat(msg);
+  
+  // Check if the document is hidden (user is on a different tab)
+  if(document.hidden && Notification.permission === "granted") {
+    // Create the notification
+    const notification = new Notification("New Message", {
+      body: msg.content,
+      icon: '/static/notification_icon.png' // Provide an icon file in your static folder
+    });
+    
+    // Play a notification sound
+    const audio = new Audio('/static/notification.mp3'); // Place your sound file in your static folder
+    audio.play().catch((err) => {
+      console.error("Error playing notification sound:", err);
+    });
+  }
+});
+
    
   </script>
 </body>
