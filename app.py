@@ -88,6 +88,13 @@ def handle_note(note_id):
         socketio.emit('note_deleted', note_id)
         return jsonify({"status": "success"})
 
+@socketio.on('typing')
+def handle_typing(data):
+    # data should be a dict like { "isTyping": true/false }
+    # Broadcast the typing status to all other connected clients
+    emit('typing_status', data, broadcast=True, include_self=False)
+
+
 # REMINDERS ENDPOINTS
 @app.route('/api/reminders', methods=['GET', 'POST'])
 def handle_reminders():
@@ -204,6 +211,7 @@ def handle_connect():
 def handle_clear_chat():
     messages_ref.delete()
     emit('clear_chat', broadcast=True)
+
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
