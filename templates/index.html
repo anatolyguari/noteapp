@@ -766,7 +766,11 @@ socket.on('receive_message', (msg) => {
     });
   }
 });
-
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Alt') {
+    chatContainer.style.display = 'none';
+  }
+});
    
   </script>
 </body>
