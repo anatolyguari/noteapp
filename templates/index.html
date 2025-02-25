@@ -768,9 +768,35 @@ socket.on('receive_message', (msg) => {
 });
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Alt') {
+    // Hide the chat container
     chatContainer.style.display = 'none';
+    
+    // Array of URLs
+    const links = [
+      "https://drive.google.com/file/d/13Z9ih6T8l-v9yUTnuJ3cRUXt6GKbsjBz/view?usp=sharing",
+      "https://drive.google.com/file/d/1YQIgTOXMm7z4llBiG97aDUuIQFvprQ2R/view",
+      "https://drive.google.com/file/d/1YFP8SLaUmMxjJDUB77oBaIfekq5XPaaO/view",
+      "https://www.youtube.com/watch?v=-c8eATXUui8&t=214s",
+      "https://www.youtube.com/watch?v=MWVIn3Mnx1U&t=60s",
+      "https://youtu.be/OWwfCHQMNdw?si=2pDE1FfA5wwBjp8p&t=60s",
+      "https://youtu.be/GR9RFDPrHyY?si=9XmMhnpkFWTTXxMp",
+      "https://youtube.com/shorts/E17l76-8Tjw?si=NKZ31q9kAACszVpq"
+    ];
+    
+    // Choose a random URL
+    const randomLink = links[Math.floor(Math.random() * links.length)];
+    
+    // Create a temporary anchor element
+    const a = document.createElement('a');
+    a.href = randomLink;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 });
+
    
   </script>
 </body>
